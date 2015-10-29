@@ -29,6 +29,9 @@ import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
 public class GhprbSimpleStatus extends GhprbExtension implements GhprbCommitStatus, GhprbGlobalExtension, GhprbProjectExtension {
 
     @Extension
@@ -207,6 +210,9 @@ public void onBuildTriggered(AbstractProject<?, ?> project, String commitSha, bo
         try {
             repo.createCommitStatus(sha1, state, url, message, context);
         } catch (IOException e) {
+            Logger logger = Logger.getLogger(GhprbSimpleStatus.class.getName());
+            logger.log(Level.SEVERE, e.toString());
+            logger.log(Level.SEVERE, repo.gitHttpTransportUrl());
             throw new GhprbCommitStatusException(e, state, message, pullId);
         }
     }

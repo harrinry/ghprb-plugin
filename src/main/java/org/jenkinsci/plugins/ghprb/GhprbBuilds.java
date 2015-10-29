@@ -37,6 +37,7 @@ public class GhprbBuilds {
     public GhprbBuilds(GhprbTrigger trigger, GhprbRepository repo) {
         this.trigger = trigger;
         this.repo = repo;
+        logger.log(Level.INFO, repo.getGitHubRepo().gitHttpTransportUrl());
     }
 
     public void build(GhprbPullRequest pr, GHUser triggerSender, String commentBody) {
@@ -171,6 +172,7 @@ public class GhprbBuilds {
                 try {
                     ((GhprbCommitStatus) ext).onBuildComplete(build, listener, repo.getGitHubRepo());
                 } catch (GhprbCommitStatusException e) {
+                    logger.log(Level.SEVERE, e.toString());
                     repo.commentOnFailure(build, listener, e);
                 }
             }
