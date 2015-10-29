@@ -46,15 +46,21 @@ import java.util.regex.Pattern;
 
 import jenkins.model.Jenkins;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * @author Honza Brázdil <jbrazdil@redhat.com>
  */
 public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
 
+    private static final Pattern githubUserRepoPattern = Pattern.compile("^(http[s]?://[^/]*)/([^/]*)/([^/]*).*");
+
     @Extension
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
     private static final Logger logger = Logger.getLogger(GhprbTrigger.class.getName());
     private final String adminlist;
+    private final String repolist;
     private final Boolean allowMembersOfWhitelistedOrgsAsAdmin;
     private final String orgslist;
     private final String cron;
@@ -66,8 +72,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
     private Boolean autoCloseFailedPullRequests;
     private Boolean displayBuildErrorsOnDownstreamBuilds;
     private List<GhprbBranch> whiteListTargetBranches;
-    private transient Ghprb helper;
-    private transient Ghprb helper2;
+    private transient Ghprb[] helper;
     private String project;
     private AbstractProject<?, ?> _project;
     private String gitHubAuthId;
@@ -99,6 +104,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
     @DataBoundConstructor
 
     public GhprbTrigger(String adminlist,
+            String repolist,
             String whitelist,
             String orgslist,
             String cron,
@@ -120,6 +126,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
             ) throws ANTLRException {
         super(cron);
         this.adminlist = adminlist;
+        this.repolist = repolist;
         this.whitelist = whitelist;
         this.orgslist = orgslist;
         this.cron = cron;
@@ -172,8 +179,43 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
             return;
         }
         try {
-            helper = new Ghprb(project, this, getDescriptor().getPullRequests("test"), "tmcmains", "test");
-            helper2 = new Ghprb(project, this, getDescriptor().getPullRequests("test2"), "tmcmains", "test2");
+            logger.log(Level.INFO, repolist);
+
+            if (repolist == null || repolist == "")
+            {
+                final GithubProjectProperty ghpp = project.getProperty(GithubProjectProperty.class);
+                if (ghpp == null || ghpp.getProjectUrl() == null) {
+                    throw new IllegalStateException("A GitHub project url is required.");
+                }
+                String baseUrl = ghpp.getProjectUrl().baseUrl();
+                Matcher m = githubUserRepoPattern.matcher(baseUrl);
+                if (!m.matches()) {
+                    throw new IllegalStateException(String.format("Invalid GitHub project url: %s", baseUrl));
+                }
+                final String user = m.group(2);
+                final String repo = m.group(3);                
+
+                helper = new Ghprb[1];
+                helper[0] = new Ghprb(project, this, getDescriptor().getPullRequests(project.getFullName()), user, repo);
+                helper[0].init();
+            }
+            else {
+                String[] repoArray =  repolist.split(",");
+                logger.log(Level.INFO, "Number of repos configured" + repoArray.length);
+
+                helper = new Ghprb[repoArray.length];
+                for (int i=0; i<repoArray.length; i++)
+                {
+                    String repo = repoArray[i];
+                    logger.log(Level.INFO, repo);
+                    String[] userRepo = repo.split(":");
+                    helper[i] = new Ghprb(project, this, getDescriptor().getPullRequests(repo), userRepo[0], userRepo[1]);
+                    logger.log(Level.INFO, "Adding trigger for {0}:{1}", 
+                        new String[] { userRepo[0], userRepo[1] });
+                    helper[i].init();
+
+                }
+            }
 
         } catch (IllegalStateException ex) {
             logger.log(Level.SEVERE, "Can't start ghprb trigger", ex);
@@ -182,23 +224,18 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
 
         logger.log(Level.INFO, "Starting the ghprb trigger for the {0} job; newInstance is {1}", 
                 new String[] { this.project, String.valueOf(newInstance) });
-        helper.init();
-        helper2.init();
     }
-
 
     @Override
     public void stop() {
-        logger.log(Level.INFO, "Stopping the ghprb trigger for project {0}", this.project);
-        if (helper != null) {
-            helper.stop();
-            helper = null;
+        for (int i=0;i<helper.length;i++) {
+            logger.log(Level.INFO, "Stopping the ghprb trigger for project {0}", this.project);
+            if (helper[i] != null) {
+                helper[i].stop();
+                helper[i] = null;
+            }
+            super.stop();
         }
-        if (helper2 != null) {
-            helper2.stop();
-            helper2 = null;
-        }
-        super.stop();
     }
 
     @Override
@@ -209,21 +246,25 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
             return;
         }
 
-        if ((helper != null && helper.isProjectDisabled()) || (_project != null && _project.isDisabled())) {
-            logger.log(Level.FINE, "Project is disabled, ignoring trigger run call for job {0}", this.project);
-            return;
-        }
-        
-        if (helper == null) {
-            logger.log(Level.SEVERE, "Helper is null and Project is not disabled, unable to run trigger");
-            return;
-        }
+        for (int i = 0; i < helper.length; i++)
+        {
 
+            if ((helper[i] != null && helper[i].isProjectDisabled()) || (_project != null && _project.isDisabled())) {
+                logger.log(Level.FINE, "Project is disabled, ignoring trigger run call for job {0}", this.project);
+                return;
+            }
+            
+            if (helper[i] == null) {
+                logger.log(Level.SEVERE, "Helper is null and Project is not disabled, unable to run trigger");
+                return;
+            }
+
+            
+            logger.log(Level.FINE, "Running trigger for {0}", project);
         
-        logger.log(Level.FINE, "Running trigger for {0}", project);
-        
-        helper.run();
-        helper2.run();
+            helper[i].run();
+        }
+    
         getDescriptor().save();
     }
 
@@ -232,6 +273,9 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
         final String commitSha = cause.isMerged() ? "origin/pr/" + cause.getPullID() + "/merge" : cause.getCommit();
         values.add(new StringParameterValue("sha1", commitSha));
         values.add(new StringParameterValue("ghprbActualCommit", cause.getCommit()));
+        values.add(new StringParameterValue("qdwrepo", repo.getRepoName()));
+        logger.log(Level.INFO, "adding evn " + repo.getRepoName());
+
         String triggerAuthor = "";
         String triggerAuthorEmail = "";
         String triggerAuthorLogin = "";
@@ -360,6 +404,8 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
             for (ParameterDefinition pd : pdp.getParameterDefinitions()) {
                 if (pd.getName().equals("sha1"))
                     continue;
+                if (pd.getName().equals("qdwrepo"))
+                    continue;
                 values.add(pd.getDefaultParameterValue());
             }
         }
@@ -384,6 +430,13 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
             return "";
         }
         return adminlist;
+    }
+
+    public String getRepolist() {
+        if (repolist == null) {
+            return "";
+        }
+        return repolist;
     }
 
     public Boolean getAllowMembersOfWhitelistedOrgsAsAdmin() {
@@ -466,23 +519,47 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
 
     @VisibleForTesting
     void setHelper(Ghprb helper) {
-        this.helper = helper;
+        this.helper[0] = helper;
     }
 
     public GhprbBuilds getBuilds() {
-        if (helper == null) {
+        if (helper[0] == null) {
             logger.log(Level.SEVERE, "The ghprb trigger for {0} wasn''t properly started - helper is null", this.project);
             return null;
         }
-        return helper.getBuilds();
+        return helper[0].getBuilds();
+    }
+
+    public void onStartedAllBuilds(AbstractBuild<?, ?> build, TaskListener listener) {
+        for (int i=0;i<helper.length;i++) {
+            try {
+                helper[i].getBuilds().onStarted(build, listener);
+            }
+            catch (Exception e)
+            {
+                logger.log(Level.INFO, e.toString(), this.project);
+            }
+        }
+    }
+
+    public void onCompletedAllBuilds(AbstractBuild<?, ?> build, TaskListener listener) {
+        for (int i=0;i<helper.length;i++) {
+            try {
+                helper[i].getBuilds().onCompleted(build, listener);
+            }
+            catch (Exception e)
+            {
+                logger.log(Level.INFO, e.toString(), this.project);
+            }
+        }
     }
 
     public GhprbRepository getRepository() {
-        if (helper == null) {
+        if (helper[0] == null) {
             logger.log(Level.SEVERE, "The ghprb trigger for {0} wasn''t properly started - helper is null", this.project);
             return null;
         }
-        return helper.getRepository();
+        return helper[0].getRepository();
     }
 
     public static final class DescriptorImpl extends TriggerDescriptor {
@@ -546,6 +623,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
         }
         
         private String adminlist;
+        private String repolist;
         
         private String requestForTestingPhrase;
 
@@ -591,6 +669,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
         @Override
         public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
             adminlist = formData.getString("adminlist");
+            repolist = formData.getString("repolist");
             requestForTestingPhrase = formData.getString("requestForTestingPhrase");
             whitelistPhrase = formData.getString("whitelistPhrase");
             okToTestPhrase = formData.getString("okToTestPhrase");
@@ -644,6 +723,10 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
         
         public String getAdminlist() {
             return adminlist;
+        }
+
+        public String getRepolist() {
+            return repolist;
         }
 
         public String getRequestForTestingPhrase() {
@@ -729,8 +812,8 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
                 jobs.put(projectName, ret);
             }
             return ret;
-        }
-
+        
+}
         public List<GhprbBranch> getWhiteListTargetBranches() {
             return whiteListTargetBranches;
         }

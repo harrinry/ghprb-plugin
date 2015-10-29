@@ -51,6 +51,10 @@ public class GhprbRepository {
         initGhRepository();
     }
 
+    public String getRepoName() {
+        return reponame;
+    }
+
     private boolean initGhRepository() {
         GitHub gitHub = null;
         try {

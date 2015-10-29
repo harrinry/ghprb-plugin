@@ -15,6 +15,9 @@ f.section(title: descriptor.displayName) {
   f.entry(field: "adminlist", title: _("Admin list")) {
     f.textarea() 
   }
+  f.entry(field: "repolist", title: _("Repo list")) {
+    f.textarea() 
+  }
   f.advanced() {
     f.entry(field: "unstableAs", title: _("Mark Unstable build in github as")) {
       f.select() 

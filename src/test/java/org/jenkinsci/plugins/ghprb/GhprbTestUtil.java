@@ -288,6 +288,7 @@ public class GhprbTestUtil {
         jsonObject.put("password", "1111");
         jsonObject.put("accessToken", "accessToken");
         jsonObject.put("adminlist", "user");
+        jsonObject.put("repolist", "");
         jsonObject.put("allowMembersOfWhitelistedOrgsAsAdmin", "false");
         jsonObject.put("publishedURL", "defaultPublishedURL");
         jsonObject.put("requestForTestingPhrase", "test this");
@@ -354,6 +355,7 @@ public class GhprbTestUtil {
 
         JSONObject defaults = new JSONObject();
         defaults.put("adminlist", "user");
+        defaults.put("repolist", "");
         defaults.put("whitelist", "user");
         defaults.put("orgslist", "");
         defaults.put("cron", "0 0 31 2 0");

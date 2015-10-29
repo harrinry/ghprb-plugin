@@ -210,10 +210,16 @@ public void onBuildTriggered(AbstractProject<?, ?> project, String commitSha, bo
         try {
             repo.createCommitStatus(sha1, state, url, message, context);
         } catch (IOException e) {
+
             Logger logger = Logger.getLogger(GhprbSimpleStatus.class.getName());
-            logger.log(Level.SEVERE, e.toString());
-            logger.log(Level.SEVERE, repo.gitHttpTransportUrl());
-            throw new GhprbCommitStatusException(e, state, message, pullId);
+            logger.log(Level.INFO, e.toString());
+            if (!e.toString().contains("No commit found for SHA"))
+            {
+                throw new GhprbCommitStatusException(e, state, message, pullId);
+            }
+            else {
+                throw new GhprbCommitStatusException(new IOException("Can be ignored"), state, message, pullId);
+            }
         }
     }
 

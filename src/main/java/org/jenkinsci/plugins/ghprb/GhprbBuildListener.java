@@ -21,7 +21,7 @@ public class GhprbBuildListener extends RunListener<AbstractBuild<?, ?>> {
     public void onStarted(AbstractBuild<?, ?> build, TaskListener listener) {
         GhprbTrigger trigger = Ghprb.extractTrigger(build);
         if (trigger != null) {
-            trigger.getBuilds().onStarted(build, listener);
+            trigger.onStartedAllBuilds(build, listener);
         }
     }
 
@@ -29,7 +29,7 @@ public class GhprbBuildListener extends RunListener<AbstractBuild<?, ?>> {
     public void onCompleted(AbstractBuild<?, ?> build, TaskListener listener) {
         GhprbTrigger trigger = Ghprb.extractTrigger(build);
         if (trigger != null) {
-            trigger.getBuilds().onCompleted(build, listener);
+            trigger.onCompletedAllBuilds(build, listener);
         }
     }
 

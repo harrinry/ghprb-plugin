@@ -2,6 +2,9 @@
   <f:entry title="${%Admin list}" field="adminlist">
     <f:textarea default="${descriptor.adminlist}"/>
   </f:entry>
+  <f:entry title="${%Repo list}" field="repolist">
+    <f:textarea default="${descriptor.repolist}"/>
+  </f:entry>
   <f:entry title="Use github hooks for build triggering" field="useGitHubHooks">
     <f:checkbox />
   </f:entry>

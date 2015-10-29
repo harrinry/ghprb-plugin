@@ -150,7 +150,7 @@ public class GhprbPullRequestMergeTest {
         jobsField.setAccessible(true);
         jobsField.set(descriptor, jobs);
 
-        helper = spy(new Ghprb(project, trigger, pulls));
+        helper = spy(new Ghprb(project, trigger, pulls, "", ""));
         trigger.setHelper(helper);
         given(helper.getRepository()).willReturn(repo);
         given(helper.isBotUser(any(GHUser.class))).willReturn(false);

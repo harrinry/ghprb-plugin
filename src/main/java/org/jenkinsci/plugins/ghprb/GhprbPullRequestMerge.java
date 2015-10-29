@@ -120,7 +120,7 @@ public class GhprbPullRequestMerge extends Recorder {
         }
 
         if (helper == null) {
-            helper = new Ghprb(project, trigger, pulls);
+            helper = new Ghprb(project, trigger, pulls, "", "");
             helper.init();
         }
 

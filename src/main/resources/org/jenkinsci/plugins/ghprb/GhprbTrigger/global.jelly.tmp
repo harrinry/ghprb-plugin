@@ -18,6 +18,9 @@
     <f:entry title="${%Admin list}" field="adminlist">
       <f:textarea />
     </f:entry>
+    <f:entry title="${%Repo list}" field="repolist">
+      <f:textarea />
+    </f:entry>
     <f:advanced>
       <f:entry title="${%Mark Unstable build in github as}" field="unstableAs">
         <f:select />
