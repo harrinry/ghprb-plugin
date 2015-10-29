@@ -67,6 +67,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
     private Boolean displayBuildErrorsOnDownstreamBuilds;
     private List<GhprbBranch> whiteListTargetBranches;
     private transient Ghprb helper;
+    private transient Ghprb helper2;
     private String project;
     private AbstractProject<?, ?> _project;
     private String gitHubAuthId;
@@ -171,7 +172,9 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
             return;
         }
         try {
-            helper = createGhprb(project);
+            helper = new Ghprb(project, this, getDescriptor().getPullRequests("test"), "tmcmains", "test");
+            helper2 = new Ghprb(project, this, getDescriptor().getPullRequests("test2"), "tmcmains", "test2");
+
         } catch (IllegalStateException ex) {
             logger.log(Level.SEVERE, "Can't start ghprb trigger", ex);
             return;
@@ -180,11 +183,9 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
         logger.log(Level.INFO, "Starting the ghprb trigger for the {0} job; newInstance is {1}", 
                 new String[] { this.project, String.valueOf(newInstance) });
         helper.init();
+        helper2.init();
     }
 
-    Ghprb createGhprb(AbstractProject<?, ?> project) {
-        return new Ghprb(project, this, getDescriptor().getPullRequests(project.getFullName()));
-    }
 
     @Override
     public void stop() {
@@ -192,6 +193,10 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
         if (helper != null) {
             helper.stop();
             helper = null;
+        }
+        if (helper2 != null) {
+            helper2.stop();
+            helper2 = null;
         }
         super.stop();
     }
@@ -218,6 +223,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
         logger.log(Level.FINE, "Running trigger for {0}", project);
         
         helper.run();
+        helper2.run();
         getDescriptor().save();
     }
 

@@ -62,7 +62,7 @@ public class Ghprb {
     private GhprbRepository repository;
     private GhprbBuilds builds;
 
-    public Ghprb(AbstractProject<?, ?> project, GhprbTrigger trigger, ConcurrentMap<Integer, GhprbPullRequest> pulls) {
+    public Ghprb(AbstractProject<?, ?> project, GhprbTrigger trigger, ConcurrentMap<Integer, GhprbPullRequest> pulls, String user, String repo) {
         this.project = project;
 
         final GithubProjectProperty ghpp = project.getProperty(GithubProjectProperty.class);
@@ -74,8 +74,6 @@ public class Ghprb {
         if (!m.matches()) {
             throw new IllegalStateException(String.format("Invalid GitHub project url: %s", baseUrl));
         }
-        final String user = m.group(2);
-        final String repo = m.group(3);
 
         this.trigger = trigger;
 
