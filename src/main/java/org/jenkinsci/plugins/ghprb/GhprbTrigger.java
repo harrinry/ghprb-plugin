@@ -77,6 +77,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
     private final Boolean useGitHubHooks;
     private final Boolean permitAll;
     private String whitelist;
+    private String retryConsoleMsg;
     private Boolean autoCloseFailedPullRequests;
     private Boolean displayBuildErrorsOnDownstreamBuilds;
     private List<GhprbBranch> whiteListTargetBranches;
@@ -127,6 +128,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
             Boolean onlyTriggerPhrase, 
             Boolean useGitHubHooks,
             Boolean permitAll,
+            String retryConsoleMsg,
             Boolean autoCloseFailedPullRequests,
             Boolean displayBuildErrorsOnDownstreamBuilds,
             String commentFilePath,
@@ -150,6 +152,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
         this.onlyTriggerPhrase = onlyTriggerPhrase;
         this.useGitHubHooks = useGitHubHooks;
         this.permitAll = permitAll;
+        this.retryConsoleMsg = retryConsoleMsg;
         this.autoCloseFailedPullRequests = autoCloseFailedPullRequests;
         this.displayBuildErrorsOnDownstreamBuilds = displayBuildErrorsOnDownstreamBuilds;
         this.skipBuildPhrase = skipBuildPhrase;
@@ -504,6 +507,10 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
         return permitAll != null && permitAll;
     }
 
+    public String getRetryConsoleMsg() {
+        return retryConsoleMsg;
+    }
+
     public Boolean getAutoCloseFailedPullRequests() {
         if (autoCloseFailedPullRequests == null) {
             Boolean autoClose = getDescriptor().getAutoCloseFailedPullRequests();
@@ -644,6 +651,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
         private GHCommitState unstableAs = GHCommitState.FAILURE;
         private List<GhprbBranch> whiteListTargetBranches;
         private List<GhprbBranch> blackListTargetBranches;
+        private String retryConsoleMsg = "";
         private Boolean autoCloseFailedPullRequests = false;
         private Boolean displayBuildErrorsOnDownstreamBuilds = false;
         
@@ -756,6 +764,7 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
             useDetailedComments = formData.getBoolean("useDetailedComments");
             manageWebhooks = formData.getBoolean("manageWebhooks");
             unstableAs = GHCommitState.valueOf(formData.getString("unstableAs"));
+            retryConsoleMsg = formData.getString("retryConsoleMsg");
             autoCloseFailedPullRequests = formData.getBoolean("autoCloseFailedPullRequests");
             displayBuildErrorsOnDownstreamBuilds = formData.getBoolean("displayBuildErrorsOnDownstreamBuilds");
             
@@ -838,6 +847,10 @@ public class GhprbTrigger extends GhprbTriggerBackwardsCompatible {
 
         public Boolean getManageWebhooks() {
             return manageWebhooks;
+        }
+
+        public String getRetryConsoleMsg() {
+            return retryConsoleMsg;
         }
 
         public Boolean getAutoCloseFailedPullRequests() {

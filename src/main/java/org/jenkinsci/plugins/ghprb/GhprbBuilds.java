@@ -25,6 +25,7 @@ import java.io.PrintStream;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -202,6 +203,24 @@ public class GhprbBuilds {
         state = Ghprb.getState(build);
 
         commentOnBuildResult(build, listener, state, c);
+
+        if (build.getResult() == Result.FAILURE && trigger.getRetryConsoleMsg() != "") {
+            List<String> log = null;
+            try {
+                log = build.getLog(2000000);
+                outerloop:
+                for(String s : log) {
+                    for (String error: trigger.getRetryConsoleMsg().split(",")) {
+                        if(s.contains(error)) {
+                            repo.addComment(c.getPullID(), "jenkins error \"" + error + "\", retrying.  test this please", build, listener);
+                            break outerloop;
+                        }
+                    }
+                }
+            } catch (IOException e) {
+            }
+        }
+
         // close failed pull request automatically
         if (state == GHCommitState.FAILURE && trigger.getAutoCloseFailedPullRequests()) {
             closeFailedRequest(listener, c);
