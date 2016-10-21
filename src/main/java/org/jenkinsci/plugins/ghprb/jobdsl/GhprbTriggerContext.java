@@ -19,6 +19,7 @@ class GhprbTriggerContext implements Context {
     boolean onlyTriggerPhrase;
     boolean useGitHubHooks;
     boolean permitAll;
+    String retryConsoleMsg;
     boolean autoCloseFailedPullRequests;
     boolean allowMembersOfWhitelistedOrgsAsAdmin;
     boolean displayBuildErrorsOnDownstreamBuilds;
@@ -173,6 +174,13 @@ class GhprbTriggerContext implements Context {
      */
     public void autoCloseFailedPullRequests(boolean autoCloseFailedPullRequests) {
         this.autoCloseFailedPullRequests = autoCloseFailedPullRequests;
+    }
+
+    /**
+     * Errors which trigger retry
+     */
+    public void retryConsoleMsg(String retryConsoleMsg) {
+        this.retryConsoleMsg = retryConsoleMsg;
     }
 
     /**
