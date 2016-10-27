@@ -22,6 +22,9 @@ f.section(title: descriptor.displayName) {
     f.entry(field: "unstableAs", title: _("Mark Unstable build in github as")) {
       f.select() 
     }
+    f.entry(field:"retryConsoleMsg", title:_("Errors that will trigger re-try")) {
+        f.textbox()
+    }
     f.entry(field: "autoCloseFailedPullRequests", title: _("Close failed pull request automatically?")) {
       f.checkbox() 
     }

@@ -18,6 +18,9 @@ f.advanced() {
   f.entry(field: "onlyTriggerPhrase", title: "Only use trigger phrase for build triggering") {
     f.checkbox() 
   }
+  f.entry(field: "retryConsoleMsg", title: _("Errors that will trigger re-try")) {
+    f.textbox() 
+  }
   f.entry(field: "autoCloseFailedPullRequests", title: _("Close failed pull request automatically?")) {
     f.checkbox(default: descriptor.autoCloseFailedPullRequests) 
   }

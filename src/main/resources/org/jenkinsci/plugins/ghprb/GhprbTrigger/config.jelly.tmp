@@ -21,6 +21,9 @@
 	<f:entry title="Only use trigger phrase for build triggering" field="onlyTriggerPhrase">
 	  <f:checkbox />
 	</f:entry>
+  <f:entry title="${%Errors that will trigger re-try?}" field="retryConsoleMsg">
+    <f:textbox />
+  </f:entry>
 	<f:entry title="${%Close failed pull request automatically?}" field="autoCloseFailedPullRequests">
 	  <f:checkbox default="${descriptor.autoCloseFailedPullRequests}"/>
 	</f:entry>

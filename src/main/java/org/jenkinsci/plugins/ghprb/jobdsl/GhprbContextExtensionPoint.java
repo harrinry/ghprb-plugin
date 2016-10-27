@@ -28,6 +28,7 @@ public class GhprbContextExtensionPoint extends ContextExtensionPoint {
                 context.onlyTriggerPhrase,
                 context.useGitHubHooks,
                 context.permitAll,
+                context.retryConsoleMsg,
                 context.autoCloseFailedPullRequests,
                 context.displayBuildErrorsOnDownstreamBuilds,
                 null,
