@@ -20,10 +20,10 @@ public class GhprbCause extends Cause {
     private final String authorEmail;
     private final String title;
     private final URL url;
-    private final GHUser triggerSender;
+    private final transient GHUser triggerSender;
     private final String commentBody;
-    private final GitUser commitAuthor;
-    private final GHUser pullRequestAuthor;
+    private final transient GitUser commitAuthor;
+    private final transient GHUser pullRequestAuthor;
     private final String description;
     private final String authorRepoGitUrl;
     private final String repoName;
